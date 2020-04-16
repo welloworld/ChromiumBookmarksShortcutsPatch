@@ -1,0 +1,273 @@
+From ee99d0eb1804a1cc822d9b6b101a05d850b0a1b7 Mon Sep 17 00:00:00 2001
+From: welloworld <wellosworld@gmail.com>
+Date: Fri, 17 Apr 2020 00:54:18 +0300
+Subject: [PATCH] Keyboard shortcuts for opening bookmarks added
+
+---
+ chrome/app/chrome_command_ids.h               |  9 ++++
+ chrome/app/chrome_dll.rc                      | 18 ++++++++
+ .../browser/ui/browser_command_controller.cc  | 28 +++++++++++
+ chrome/browser/ui/browser_commands.cc         | 46 +++++++++++++++++++
+ chrome/browser/ui/browser_commands.h          |  1 +
+ chrome/browser/ui/views/accelerator_table.cc  | 18 ++++++++
+ .../ui/views/bookmarks/bookmark_bar_view.cc   | 13 ++++++
+ .../ui/views/bookmarks/bookmark_bar_view.h    |  4 ++
+ 8 files changed, 137 insertions(+)
+
+diff --git a/chrome/app/chrome_command_ids.h b/chrome/app/chrome_command_ids.h
+index 40401fae65..27420e3251 100644
+--- a/chrome/app/chrome_command_ids.h
++++ b/chrome/app/chrome_command_ids.h
+@@ -112,6 +112,15 @@
+ #define IDC_QRCODE_GENERATOR            35021
+ #define IDC_WINDOW_CLOSE_TABS_TO_RIGHT  35022
+ #define IDC_WINDOW_CLOSE_OTHER_TABS     35023
++#define IDC_SELECT_BOOKMARK_0           35024
++#define IDC_SELECT_BOOKMARK_1           35025
++#define IDC_SELECT_BOOKMARK_2           35026
++#define IDC_SELECT_BOOKMARK_3           35027
++#define IDC_SELECT_BOOKMARK_4           35028
++#define IDC_SELECT_BOOKMARK_5           35029
++#define IDC_SELECT_BOOKMARK_6           35030
++#define IDC_SELECT_BOOKMARK_7           35031
++#define IDC_SELECT_BOOKMARK_8           35032
+ 
+ // Page-manipulation commands that target a specified tab, which may not be the
+ // active one.
+diff --git a/chrome/app/chrome_dll.rc b/chrome/app/chrome_dll.rc
+index 7e63b682ba..14c8865890 100644
+--- a/chrome/app/chrome_dll.rc
++++ b/chrome/app/chrome_dll.rc
+@@ -83,6 +83,24 @@ BEGIN
+     VK_F5,          IDC_RELOAD_BYPASSING_CACHE, VIRTKEY, SHIFT
+     "T",            IDC_RESTORE_TAB,            VIRTKEY, CONTROL, SHIFT
+     "S",            IDC_SAVE_PAGE,              VIRTKEY, CONTROL
++    "1",            IDC_SELECT_BOOKMARK_0,      VIRTKEY, ALT
++    VK_NUMPAD1,     IDC_SELECT_BOOKMARK_0,      VIRTKEY, ALT
++    "2",            IDC_SELECT_BOOKMARK_1,      VIRTKEY, ALT
++    VK_NUMPAD2,     IDC_SELECT_BOOKMARK_1,      VIRTKEY, ALT
++    "3",            IDC_SELECT_BOOKMARK_2,      VIRTKEY, ALT
++    VK_NUMPAD3,     IDC_SELECT_BOOKMARK_2,      VIRTKEY, ALT
++    "4",            IDC_SELECT_BOOKMARK_3,      VIRTKEY, ALT
++    VK_NUMPAD4,     IDC_SELECT_BOOKMARK_3,      VIRTKEY, ALT
++    "5",            IDC_SELECT_BOOKMARK_4,      VIRTKEY, ALT
++    VK_NUMPAD5,     IDC_SELECT_BOOKMARK_4,      VIRTKEY, ALT
++    "6",            IDC_SELECT_BOOKMARK_5,      VIRTKEY, ALT
++    VK_NUMPAD6,     IDC_SELECT_BOOKMARK_5,      VIRTKEY, ALT
++    "7",            IDC_SELECT_BOOKMARK_6,      VIRTKEY, ALT
++    VK_NUMPAD7,     IDC_SELECT_BOOKMARK_6,      VIRTKEY, ALT
++    "8",            IDC_SELECT_BOOKMARK_7,      VIRTKEY, ALT
++	VK_NUMPAD8,     IDC_SELECT_BOOKMARK_7,      VIRTKEY, ALT
++	"9",            IDC_SELECT_BOOKMARK_8,      VIRTKEY, ALT
++    VK_NUMPAD9,     IDC_SELECT_BOOKMARK_8,      VIRTKEY, ALT
+     "9",            IDC_SELECT_LAST_TAB,        VIRTKEY, CONTROL
+     VK_NUMPAD9,     IDC_SELECT_LAST_TAB,        VIRTKEY, CONTROL
+     VK_NEXT,        IDC_SELECT_NEXT_TAB,        VIRTKEY, CONTROL
+diff --git a/chrome/browser/ui/browser_command_controller.cc b/chrome/browser/ui/browser_command_controller.cc
+index 2f3f9f86d7..10fec8e3d7 100644
+--- a/chrome/browser/ui/browser_command_controller.cc
++++ b/chrome/browser/ui/browser_command_controller.cc
+@@ -433,6 +433,17 @@ bool BrowserCommandController::ExecuteCommandWithDisposition(
+     case IDC_MOVE_TAB_PREVIOUS:
+       MoveTabPrevious(browser_);
+       break;
++    case IDC_SELECT_BOOKMARK_0:
++    case IDC_SELECT_BOOKMARK_1:
++    case IDC_SELECT_BOOKMARK_2:
++    case IDC_SELECT_BOOKMARK_3:
++    case IDC_SELECT_BOOKMARK_4:
++    case IDC_SELECT_BOOKMARK_5:
++    case IDC_SELECT_BOOKMARK_6:
++    case IDC_SELECT_BOOKMARK_7:
++    case IDC_SELECT_BOOKMARK_8:
++      SelectNumberedBookmark(browser_, id - IDC_SELECT_BOOKMARK_0);
++      break;
+     case IDC_SELECT_TAB_0:
+     case IDC_SELECT_TAB_1:
+     case IDC_SELECT_TAB_2:
+@@ -1053,6 +1064,23 @@ void BrowserCommandController::InitCommandState() {
+   command_updater_.UpdateCommandEnabled(IDC_SITE_SETTINGS, is_web_app);
+   command_updater_.UpdateCommandEnabled(IDC_WEB_APP_MENU_APP_INFO, is_web_app);
+ 
++  // Bookmarks management commands
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_0, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_1, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_2, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_3, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_4, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_5, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_6, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_1, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_2, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_3, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_4, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_5, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_6, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_7, browser_defaults::bookmarks_enabled);
++  command_updater_.UpdateCommandEnabled(IDC_SELECT_BOOKMARK_8, browser_defaults::bookmarks_enabled);
++
+   // Tab management commands
+   const bool supports_tabs =
+       browser_->SupportsWindowFeature(Browser::FEATURE_TABSTRIP);
+diff --git a/chrome/browser/ui/browser_commands.cc b/chrome/browser/ui/browser_commands.cc
+index b2b1904401..843516125c 100644
+--- a/chrome/browser/ui/browser_commands.cc
++++ b/chrome/browser/ui/browser_commands.cc
+@@ -65,6 +65,8 @@
+ #include "chrome/browser/ui/tabs/tab_group.h"
+ #include "chrome/browser/ui/tabs/tab_group_model.h"
+ #include "chrome/browser/ui/translate/translate_bubble_view_state_transition.h"
++#include "chrome/browser/ui/views/bookmarks/bookmark_bar_view.h"
++#include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/web_applications/app_browser_controller.h"
+ #include "chrome/browser/upgrade_detector/upgrade_detector.h"
+ #include "chrome/browser/web_applications/components/app_registrar.h"
+@@ -116,7 +118,10 @@
+ #include "ui/base/clipboard/clipboard_buffer.h"
+ #include "ui/base/clipboard/scoped_clipboard_writer.h"
+ #include "ui/base/window_open_disposition.h"
++#include "ui/events/base_event_utils.h"
++#include "ui/events/event.h"
+ #include "ui/events/keycodes/keyboard_codes.h"
++#include "ui/views/controls/button/menu_button.h"
+ #include "url/gurl.h"
+ #include "url/url_constants.h"
+ 
+@@ -1019,6 +1024,47 @@ bool CanBookmarkAllTabs(const Browser* browser) {
+          CanBookmarkCurrentTab(browser);
+ }
+ 
++void SelectNumberedBookmark(Browser* browser, size_t index) {
++  BookmarkModel* bookmarksModel =
++      BookmarkModelFactory::GetForBrowserContext(browser->profile());
++  if (!bookmarksModel || !bookmarksModel->loaded())
++    return;
++
++  if (ShouldShowAppsShortcutInBookmarkBar(browser->profile())) {
++    if (index == 0) {
++      AddTabAt(browser, GURL(kChromeUIAppsURL), -1, true);
++      return;
++    }
++    // If apps shortcut is shown, index of array must be decreased by 1.
++    --index;
++  }
++
++  const auto& bookmarks_vector =
++      bookmarksModel->bookmark_bar_node()->children();
++  if (index >= bookmarks_vector.size())
++    return;
++
++  const bookmarks::BookmarkNode* node = bookmarks_vector[index].get();
++  BookmarkBarView* bar_view = BrowserView::GetBrowserViewForBrowser(browser)
++      ->GetBookmarkBarView();
++  views::Button* bookmark_button = bar_view->GetLabelButtonForNode(node);
++  if (bookmark_button == nullptr)
++    return;
++
++  ui::MouseEvent simulated_click(
++      ui::ET_MOUSE_PRESSED, gfx::Point(0, 0),
++      gfx::Point(0, 0), ui::EventTimeForNow(), 0, 0);
++
++  // Simulate a "click" on the bookmark using BookmarkBarView
++  if (node->is_folder()) {
++    BookmarkBarView::MenuButtonListener menu_listener(bar_view);
++    menu_listener.ButtonPressed(bookmark_button, simulated_click);
++  } else {
++    BookmarkBarView::ButtonListener button_listener(bar_view);
++    button_listener.ButtonPressed(bookmark_button, simulated_click);
++  }
++}
++
+ void SaveCreditCard(Browser* browser) {
+   WebContents* web_contents =
+       browser->tab_strip_model()->GetActiveWebContents();
+diff --git a/chrome/browser/ui/browser_commands.h b/chrome/browser/ui/browser_commands.h
+index 6b59473da1..0578f98053 100644
+--- a/chrome/browser/ui/browser_commands.h
++++ b/chrome/browser/ui/browser_commands.h
+@@ -140,6 +140,7 @@ void BookmarkCurrentTab(Browser* browser);
+ bool CanBookmarkCurrentTab(const Browser* browser);
+ void BookmarkAllTabs(Browser* browser);
+ bool CanBookmarkAllTabs(const Browser* browser);
++void SelectNumberedBookmark(Browser* browser, size_t index);
+ void SaveCreditCard(Browser* browser);
+ void MigrateLocalCards(Browser* browser);
+ void MaybeShowSaveLocalCardSignInPromo(Browser* browser);
+diff --git a/chrome/browser/ui/views/accelerator_table.cc b/chrome/browser/ui/views/accelerator_table.cc
+index ab03451072..5db30c1a67 100644
+--- a/chrome/browser/ui/views/accelerator_table.cc
++++ b/chrome/browser/ui/views/accelerator_table.cc
+@@ -49,6 +49,24 @@ const AcceleratorMapping kAcceleratorMap[] = {
+     {ui::VKEY_R, ui::EF_SHIFT_DOWN | ui::EF_PLATFORM_ACCELERATOR,
+      IDC_RELOAD_BYPASSING_CACHE},
+     {ui::VKEY_S, ui::EF_PLATFORM_ACCELERATOR, IDC_SAVE_PAGE},
++    {ui::VKEY_1, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_0},
++    {ui::VKEY_NUMPAD1, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_0},
++    {ui::VKEY_2, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_1},
++    {ui::VKEY_NUMPAD2, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_1},
++    {ui::VKEY_3, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_2},
++    {ui::VKEY_NUMPAD3, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_2},
++    {ui::VKEY_4, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_3},
++    {ui::VKEY_NUMPAD4, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_3},
++    {ui::VKEY_5, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_4},
++    {ui::VKEY_NUMPAD5, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_4},
++    {ui::VKEY_6, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_5},
++    {ui::VKEY_NUMPAD6, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_5},
++    {ui::VKEY_7, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_6},
++    {ui::VKEY_NUMPAD7, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_6},
++    {ui::VKEY_8, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_7},
++    {ui::VKEY_NUMPAD8, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_7},
++    {ui::VKEY_9, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_8},
++    {ui::VKEY_NUMPAD9, ui::EF_ALT_DOWN, IDC_SELECT_BOOKMARK_8},
+     {ui::VKEY_9, ui::EF_PLATFORM_ACCELERATOR, IDC_SELECT_LAST_TAB},
+     {ui::VKEY_NUMPAD9, ui::EF_PLATFORM_ACCELERATOR, IDC_SELECT_LAST_TAB},
+ #if defined(OS_LINUX) && !defined(OS_CHROMEOS)
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+index 4c8560c268..d1fcaa5dda 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+@@ -625,6 +625,19 @@ MenuButton* BookmarkBarView::GetMenuButtonForNode(const BookmarkNode* node) {
+   return static_cast<MenuButton*>(bookmark_buttons_[size_t{index}]);
+ }
+ 
++views::LabelButton* BookmarkBarView::GetLabelButtonForNode(const BookmarkNode* node) {
++  if (node == managed_->managed_node())
++    return managed_bookmarks_button_;
++  if (node == model_->other_node())
++    return other_bookmarks_button_;
++  if (node == model_->bookmark_bar_node())
++    return overflow_button_;
++  int index = model_->bookmark_bar_node()->GetIndexOf(node);
++  if (index == -1)
++    return nullptr;
++  return bookmark_buttons_[size_t{index}];
++}
++
+ void BookmarkBarView::GetAnchorPositionForButton(
+     MenuButton* button,
+     views::MenuAnchorPosition* anchor) {
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.h b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.h
+index 9362500f28..11a00617e6 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.h
++++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.h
+@@ -24,6 +24,7 @@
+ #include "ui/views/animation/animation_delegate_views.h"
+ #include "ui/views/context_menu_controller.h"
+ #include "ui/views/controls/button/button.h"
++#include "ui/views/controls/button/label_button.h"
+ #include "ui/views/controls/menu/menu_types.h"
+ #include "ui/views/drag_controller.h"
+ 
+@@ -132,6 +133,9 @@ class BookmarkBarView : public views::AccessiblePaneView,
+   // Returns the MenuButton for node.
+   views::MenuButton* GetMenuButtonForNode(const bookmarks::BookmarkNode* node);
+ 
++  // Returns the Button for node.
++  views::LabelButton* GetLabelButtonForNode(const bookmarks::BookmarkNode* node);
++
+   // Returns the position to anchor the menu for |button| at.
+   void GetAnchorPositionForButton(views::MenuButton* button,
+                                   views::MenuAnchorPosition* anchor);
+-- 
+2.24.1.windows.2
+
