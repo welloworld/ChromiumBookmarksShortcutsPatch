@@ -2,10 +2,13 @@
 We found that keyboard shortcuts for the bookmark's bar can be really cool and helping.
 
 ## WHY
-We found many solutions implementing JS extensions, but unfortunately all of them were kind of suck,
+We found many solutions implementing JS extensions, but unfortunately all of them were suck,
 Due to the fact that the bookmarks API to JS extensions is missing the feature of folders.
-That means, that you can't open folders (an UI windows).
-This led JS solutions to use ugly ideas such as creating everything in their own UI.
+
+That means, that you can't open folders (UI windows).
+
+This led JS solutions to use ugly ideas such as creating **everything in their own UI**.
+
 Our goal is to solve that problem!
 
 ## HOWTO
